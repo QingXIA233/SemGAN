@@ -1,8 +1,0 @@
-{
-  "description": "Testing with trained model.",
-  "network_version": "pytorch",
-  "img_dataset_name": "GTA2Cityscapes_test",
-  "label_dataset_name": "GTA2Cityscapes_labels_test",
-  "do_flipping": 0,
-  "_SAVE_FREQ": 100.0
-}
