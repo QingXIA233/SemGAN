@@ -4,7 +4,7 @@
 each domain."""
 DATASET_TO_SIZES = {
     'GTA2Cityscapes_train': 500,
-    'GTA2Cityscapes_test': 10,
+    'GTA2Cityscapes_test': 5,
 }
 
 """The image types of each dataset. Currently only supports .jpg or .png"""
