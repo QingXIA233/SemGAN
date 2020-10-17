@@ -195,13 +195,13 @@ class SemGAN:
         *_summ -> Summary variables for above loss functions
         """
         cycle_consistency_loss_a = \
-            self._lambda_cyc_a * losses_ssim.cycle_consistency_loss(
+            self._lambda_cyc_a * losses.cycle_consistency_loss(
                 real_images=self.input_a, generated_images=self.cycle_images_a,
                 real_labels=self.oh_labels_a, generated_labels=self.cycle_oh_labels_a,
                 lambda_ssim=self._lambda_ssim
             )
         cycle_consistency_loss_b = \
-            self._lambda_cyc_b * losses_ssim.cycle_consistency_loss(
+            self._lambda_cyc_b * losses.cycle_consistency_loss(
                 real_images=self.input_b, generated_images=self.cycle_images_b,
                 real_labels=self.oh_labels_b, generated_labels=self.cycle_oh_labels_b,
                 lambda_ssim=self._lambda_ssim
