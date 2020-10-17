@@ -8,6 +8,7 @@
   "label_dataset_name": "GTA2Cityscapes_labels_train",
   "_LAMBDA_CYC_A": 10,
   "_LAMBDA_CYC_B": 10,
+  "_LAMBDA_SSIM": 1,
   "_LAMBDA_SEM_A": 10,
   "_LAMBDA_SEM_B": 10,
   "_SAVE_FREQ": 100.0
