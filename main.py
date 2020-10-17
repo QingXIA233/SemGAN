@@ -12,7 +12,8 @@ import tensorflow as tf
 
 import semgan_datasets
 import semgan_label_datasets
-import data_loader, losses, model
+import data_loader, model
+import losses
 
 
 slim = tf.contrib.slim
@@ -21,7 +22,7 @@ slim = tf.contrib.slim
 class SemGAN:
     """The SemGAN module."""
 
-    def __init__(self, pool_size, lambda_cyc_a, lambda_cyc_b,
+    def __init__(self, pool_size, lambda_cyc_a, lambda_cyc_b, lambda_ssim,
                  lambda_sem_a, lambda_sem_b, output_root_dir, to_restore,
                  base_lr, max_step, network_version,
                  img_dataset_name, label_dataset_name, checkpoint_dir, save_freq):
@@ -31,6 +32,7 @@ class SemGAN:
         self._size_before_crop = 286
         self._lambda_cyc_a = lambda_cyc_a
         self._lambda_cyc_b = lambda_cyc_b
+        self._lambda_ssim = lambda_ssim
         self._lambda_sem_a = lambda_sem_a
         self._lambda_sem_b = lambda_sem_b
         self._output_dir = os.path.join(output_root_dir, current_time)
@@ -193,14 +195,16 @@ class SemGAN:
         *_summ -> Summary variables for above loss functions
         """
         cycle_consistency_loss_a = \
-            self._lambda_cyc_a * losses.cycle_consistency_loss(
+            self._lambda_cyc_a * losses_ssim.cycle_consistency_loss(
                 real_images=self.input_a, generated_images=self.cycle_images_a,
-                real_labels=self.oh_labels_a, generated_labels=self.cycle_oh_labels_a
+                real_labels=self.oh_labels_a, generated_labels=self.cycle_oh_labels_a,
+                lambda_ssim=self._lambda_ssim
             )
         cycle_consistency_loss_b = \
-            self._lambda_cyc_b * losses.cycle_consistency_loss(
+            self._lambda_cyc_b * losses_ssim.cycle_consistency_loss(
                 real_images=self.input_b, generated_images=self.cycle_images_b,
-                real_labels=self.oh_labels_b, generated_labels=self.cycle_oh_labels_b
+                real_labels=self.oh_labels_b, generated_labels=self.cycle_oh_labels_b,
+                lambda_ssim=self._lambda_ssim
             )
 
         lsgan_loss_a = losses.lsgan_loss_generator(self.prob_fake_a_is_real)
@@ -626,6 +630,9 @@ def main(to_train, log_dir, config_filename, checkpoint_dir):
 
     lambda_cyc_a = float(config['_LAMBDA_CYC_A']) if '_LAMBDA_CYC_A' in config else 10.0
     lambda_cyc_b = float(config['_LAMBDA_CYC_B']) if '_LAMBDA_CYC_B' in config else 10.0
+
+    lambda_ssim = float(config['_LAMBDA_SSIM']) if '_LAMBDA_SSIM' in config else 10.0
+
     lambda_sem_a = float(config['_LAMBDA_SEM_A']) if '_LAMBDA_SEM_A' in config else 10.0
     lambda_sem_b = float(config['_LAMBDA_SEM_B']) if '_LAMBDA_SEM_B' in config else 10.0
 
@@ -640,7 +647,7 @@ def main(to_train, log_dir, config_filename, checkpoint_dir):
 
     save_freq = float(config['_SAVE_FREQ'])
 
-    semgan_model = SemGAN(pool_size, lambda_cyc_a, lambda_cyc_b, lambda_sem_a, lambda_sem_b,
+    semgan_model = SemGAN(pool_size, lambda_cyc_a, lambda_cyc_b, lambda_ssim, lambda_sem_a, lambda_sem_b,
                                 log_dir, to_restore, base_lr, max_step, network_version,
                                 img_dataset_name, label_dataset_name, checkpoint_dir, save_freq)
 
