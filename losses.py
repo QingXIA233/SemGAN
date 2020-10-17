@@ -18,8 +18,31 @@ def categorical_crossentropy(y_true, y_pred):
     y_pred = K.clip(y_pred, eps, 1 - eps)
     return tf.abs(-K.mean(y_true * K.log(y_pred) + (1 - y_true) * K.log(1 - y_pred)))
 
+def depth_loss_function(y_true, y_pred):
 
-def cycle_consistency_loss(real_images, generated_images, real_labels, generated_labels):
+    theta=0.1
+    maxDepthVal=1000.0/10.0
+    
+    # Point-wise depth
+    l_depth = K.mean(K.abs(y_pred - y_true), axis=-1)
+
+    # Edges
+    dy_true, dx_true = tf.image.image_gradients(y_true)
+    dy_pred, dx_pred = tf.image.image_gradients(y_pred)
+    l_edges = K.mean(K.abs(dy_pred - dy_true) + K.abs(dx_pred - dx_true), axis=-1)
+
+    # Structural similarity (SSIM) index
+    l_ssim = K.clip((1 - tf.image.ssim(y_true, y_pred, maxDepthVal)) * 0.5, 0, 1)
+
+    # Weights
+    w1 = 1.0
+    w2 = 1.0
+    w3 = theta
+
+    return tf.reduce_mean((w1 * l_ssim) + (w2 * K.mean(l_edges)) + (w3 * K.mean(l_depth)))
+
+
+def cycle_consistency_loss(real_images, generated_images, real_labels, generated_labels, lambda_ssim):
     """Compute the cycle consistency loss.
 
     The cycle consistency loss is defined as the sum of the L1 distances
@@ -51,10 +74,12 @@ def cycle_consistency_loss(real_images, generated_images, real_labels, generated
     In SemGAN, a standard cross-entropy loss is included for computing the classification loss.
     """
     cycle_consistent_loss = tf.reduce_mean(tf.abs(real_images - generated_images))
+
+    ssim_loss = lambda_ssim * depth_loss_function(real_images, generated_images)
     
     classification_loss = categorical_crossentropy(real_labels, generated_labels)
 
-    cycle_loss = cycle_consistent_loss + classification_loss
+    cycle_loss = cycle_consistent_loss + classification_loss + ssim_loss
 
     return cycle_loss
 
@@ -130,8 +155,6 @@ def semantic_consistency_loss(real_labels, generated_labels):
     
 
     return sem_consistent_loss
-
-
 
 
 
